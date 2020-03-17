@@ -6,6 +6,8 @@ A ROS package that can forward online data from Rokoko Smartsuit Pro via Rokoko 
 * Rokoko Studio
 * ROS machine
 * Router
+### Setup example
+The ROS machine is connected to the router via a cable. Rokoko Studio is installed on another machine which is wirelessly connected to the router. The connection between Rokoko Smartsuit Pro and the router is configured in the Studio Custom Streaming (an example can be found [here](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/setup_custom%20streaming.png)) and do not forget to follow this [guide](https://rokoko.freshdesk.com/support/solutions/articles/47001095035-getting-started-guide-smartsuit-pro) for Studio and Smartsuit. Note that Custom Streaming requires Studio Plus subscription or above.
 
 ## Installation
 ```
