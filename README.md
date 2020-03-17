@@ -1,5 +1,5 @@
 # rokoko_data_forwarding
-A ROS package that can forward online data from Rokoko Smartsuit Pro via Rokoko Studio Custom Streaming.
+A ROS package that can forward online data from [Rokoko Smartsuit Pro](https://www.rokoko.com) via [Rokoko Studio](https://rokoko.freshdesk.com/support/solutions/articles/47001111806-rokoko-studio-1-15-1) Custom Streaming.
 
 ## Requirements
 * Rokoko Smartsuit Pro
@@ -31,12 +31,12 @@ source ~/catkin_ws/devel/setup.bash
 ```
 roscore
 ```
-2. Open a second terminal and run the publisher:
+2. Open a second terminal and run the [publisher](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_publisher.py):
 ```
 cd ~/catkin_ws
 rosrun rokoko_data_forwarding online_data_publisher.py
 ```
-3. Open a third terminal and run the subscriber:
+3. Open a third terminal and run the [subscriber](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_subscriber.py):
 ```
 cd ~/catkin_ws
 rosrun rokoko_data_forwarding online_data_subscriber.py
@@ -45,4 +45,4 @@ rosrun rokoko_data_forwarding online_data_subscriber.py
 
 ## Reminder
 * Always connect the devices in the same network.
-* Set **_warm_up=0_** in **_online_data_publisher.py_** if necessary.
+* Set **_warm_up=0_** in [online_data_publisher.py](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_publisher.py) if necessary.
