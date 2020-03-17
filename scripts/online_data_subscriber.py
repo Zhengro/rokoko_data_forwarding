@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
 import rospy
-from forward_suit_online_data.msg import Suit
+from rokoko_data_forwarding.msg import Suit
 
 
 def callback(data):
     rospy.loginfo('Received one frame: \ntimestamp: {}\ntime: {}.'.format(data.timestamp, rospy.get_time()))
-    # print(data.frame[0, :])
+    # print(len(data.frame.data))
+    # print('\n')
 
 
 def listener():

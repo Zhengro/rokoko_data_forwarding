@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 from custom_streaming_udp import Socket
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
@@ -84,7 +86,7 @@ if __name__ == "__main__":
 
     # first enable Custom Streaming in Rokoko Studio to stream data
     # then configure ip and port with the same setting in Custom Streaming
-    ip = '192.168.0.153'
+    ip = '192.168.0.142'
     port = 14043
 
     S = Socket(ip, port)

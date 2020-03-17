@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(forward_suit_online_data)
+project(rokoko_data_forwarding)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
 # add_compile_options(-std=c++11)
@@ -103,8 +103,8 @@ generate_messages(
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-  INCLUDE_DIRS include
-  LIBRARIES forward_suit_online_data
+# INCLUDE_DIRS include
+  LIBRARIES rokoko_data_forwarding
   CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
   DEPENDS system_lib
 )

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>forward_suit_online_data</name>
+  <name>rokoko_data_forwarding</name>
   <version>0.0.0</version>
-  <description>The forward_suit_online_data package</description>
+  <description>The rokoko_data_forwarding package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

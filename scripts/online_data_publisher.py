@@ -1,12 +1,12 @@
 #!/usr/bin/env python
 
 import rospy
-from forward_suit_online_data.msg import Suit
+import time
+import json
+from rokoko_data_forwarding.msg import Suit
 from std_msgs.msg import MultiArrayDimension
 from custom_streaming_udp import Socket
 from custom_streaming_usage import SuitComposition
-import time
-import json
 
 
 def process_one_frame(one_frame):
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     try:
         # configure the ip and port
         ip = '192.168.0.142'
-        port = 14041
+        port = 14043
 
         # set several seconds to ensure the steady streaming without burst in the first several frames
         warm_up = 5
