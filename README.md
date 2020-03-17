@@ -44,5 +44,5 @@ rosrun rokoko_data_forwarding online_data_subscriber.py
 4. When test is done, press Ctrl-C to terminate each terminal.
 
 ## Reminder
-* Always connect the devices in the same network
-* Set warm_up=0 in online_data_publisher.py if necessary
+* Always connect the devices in the same network.
+* Set **_warm_up=0_** in **_online_data_publisher.py_** if necessary.
