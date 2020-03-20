@@ -22,7 +22,7 @@ mkdir -p ~/catkin_ws/src                                           # Make a new 
 cd ~/catkin_ws/src                                                 # Navigate to the source space
 git clone https://github.com/Zhengro/rokoko_data_forwarding.git    # Clone repo
 cd ~/catkin_ws                                                     # Navigate to the catkin workspace
-catkin_make                                                        # Build the packages in the catkin workspace
+catkin build rokoko_data_forwarding                                # Build rokoko_data_forwarding
 source ~/catkin_ws/devel/setup.bash                                # Add the workspace to your ROS environment
 ```
 ## Test steps
