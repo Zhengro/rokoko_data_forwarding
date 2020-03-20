@@ -31,12 +31,12 @@ source ~/catkin_ws/devel/setup.bash
 ```
 roscore
 ```
-2. Open a second terminal and run the [publisher](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_publisher.py):
+2. Open a second terminal for the [publisher](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_publisher.py):
 ```
 cd ~/catkin_ws
 rosrun rokoko_data_forwarding online_data_publisher.py
 ```
-3. Open a third terminal and run the [subscriber](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_subscriber.py):
+3. Open a third terminal for the [subscriber](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/online_data_subscriber.py):
 ```
 cd ~/catkin_ws
 rosrun rokoko_data_forwarding online_data_subscriber.py
