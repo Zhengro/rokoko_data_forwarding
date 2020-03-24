@@ -4,7 +4,7 @@ A ROS package that can forward online data from [Rokoko Smartsuit Pro](https://w
 ## Table of contents
    - [Requirements](#requirements)
    - [Installation](#installation)
-   - [Test steps](#test-steps)
+   - [Usage](#usage)
 
 ## Requirements
 * Rokoko Smartsuit Pro
@@ -25,7 +25,7 @@ cd ~/catkin_ws                                                     # Navigate to
 catkin build rokoko_data_forwarding                                # Build rokoko_data_forwarding
 source ~/catkin_ws/devel/setup.bash                                # Add the workspace to your ROS environment
 ```
-## Test steps
+## Usage
 0. Run the following three lines on every new shell you open or add them to your .bashrc:
 ```
 export ROS_DISTRO=indigo
