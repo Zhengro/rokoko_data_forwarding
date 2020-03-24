@@ -1,2 +1,2 @@
 std_msgs/Float64MultiArray frame
-int64 timestamp
+float64 timestamp
