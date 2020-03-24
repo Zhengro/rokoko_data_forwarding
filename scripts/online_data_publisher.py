@@ -26,7 +26,7 @@ def process_one_frame(one_frame):
         data_list.append(one_frame['actors'][0][body_part]['position']['y'])
         data_list.append(one_frame['actors'][0][body_part]['position']['z'])
 
-    print('Forward one frame: \ntimestamp: {}\ntime: {}.'.format(timestamp, rospy.get_time()))
+    print('Forward one frame: \ntimestamp: {}\ntime: {}.\n'.format(timestamp, rospy.get_time()))
 
     return data_list, timestamp
 
@@ -41,7 +41,7 @@ def talker(ip, port, warm_up):
 
     Must define a custom message named 'Suit' in advance, i.e.,
     std_msgs/Float64MultiArray frame
-    int64 timestamp
+    float64 timestamp
     """
 
     pub = rospy.Publisher('suit_online_data', Suit, queue_size=10)
@@ -50,7 +50,10 @@ def talker(ip, port, warm_up):
 
     S = Socket(ip, port)
     S.connect()
+    alarm_time = [i for i in range(1, warm_up+1)]
+    alarm_idx = 0
     start_time = time.time()
+    
     while not rospy.is_shutdown():
         data_byte = S.receive()               # <class 'bytes'> or False
         if not data_byte:
@@ -60,7 +63,12 @@ def talker(ip, port, warm_up):
         data_str = data_byte.decode('ASCII')  # <class 'str'>
         data_json = (json.loads(data_str))    # <class 'dict'>
 
-        if time.time() - start_time > warm_up:
+	if warm_up > 0 and time.time() - start_time > alarm_time[alarm_idx]:
+            print('{}s'.format(warm_up))
+            warm_up -= 1
+            alarm_idx += 1
+
+        if warm_up == 0:
             data_list, timestamp = process_one_frame(data_json)
 
             msg_data = Suit()
@@ -76,6 +84,7 @@ def talker(ip, port, warm_up):
             msg_data.timestamp = timestamp
 
             rospy.loginfo(msg_data)
+            print('\n')
             pub.publish(msg_data)
             rate.sleep()
 
@@ -83,11 +92,11 @@ def talker(ip, port, warm_up):
 if __name__ == '__main__':
     try:
         # configure the ip and port
-        ip = '192.168.0.142'
+        ip = '192.168.0.140'
         port = 14043
 
         # set several seconds to ensure the steady streaming without burst in the first several frames
-        warm_up = 5
+        warm_up = 10
 
         talker(ip=ip, port=port, warm_up=warm_up)
     except rospy.ROSInterruptException:
