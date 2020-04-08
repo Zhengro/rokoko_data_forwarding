@@ -31,7 +31,7 @@ def process_one_frame(one_frame):
     return data_list, timestamp
 
 
-def talker(ip, port, warm_up):
+def talker(ip, port, warm_up, fps):
     """
     Publish suit online data.
     :param ip: the ip address for forwarding data
@@ -46,7 +46,7 @@ def talker(ip, port, warm_up):
 
     pub = rospy.Publisher('suit_online_data', Suit, queue_size=10)
     rospy.init_node('online_data_publisher', anonymous=True)
-    rate = rospy.Rate(10)  # 10hz
+    rate = rospy.Rate(fps)
 
     S = Socket(ip, port)
     S.connect()
@@ -97,7 +97,8 @@ if __name__ == '__main__':
 
         # set several seconds to ensure the steady streaming without burst in the first several frames
         warm_up = 10
+        fps = 80
 
-        talker(ip=ip, port=port, warm_up=warm_up)
+        talker(ip=ip, port=port, warm_up=warm_up, fps=fps)
     except rospy.ROSInterruptException:
         pass
