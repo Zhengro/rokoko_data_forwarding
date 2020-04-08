@@ -22,8 +22,8 @@ class SuitComposition(object):
         self.connections = [[0, 1], [1, 2], [2, 3], [3, 4],         # central part
                             [4, 5], [5, 6], [6, 7],                 # left leg
                             [4, 8], [8, 9], [9, 10],                # right leg
-                            [1, 11], [11, 12], [12, 13], [13, 14],  # left arm
-                            [1, 15], [15, 16], [16, 17], [17, 18]]  # right arm
+                            [2, 11], [11, 12], [12, 13], [13, 14],  # left arm
+                            [2, 15], [15, 16], [16, 17], [17, 18]]  # right arm
 
     def draw_skeleton(self, socket_object, duration):
         """
@@ -72,6 +72,9 @@ class SuitComposition(object):
             ax.set_xlabel('X(m)')
             ax.set_ylabel('Y(m)')
             ax.set_zlabel('Z(m)')
+            ax.set_xlim(-0.3, 0.3)
+            ax.set_ylim(-0.3, 0.3)
+            ax.set_zlim(0, 1.6)
             # print(data_json['timestamp'])               # valid timestamp
             # print(data_json['actors'][0]['timestamp'])  # always 0.0
             ax.set_title('Timestamp: {0:.4f} s'.format(time.time() - start_time))
