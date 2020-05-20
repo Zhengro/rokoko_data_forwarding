@@ -54,5 +54,6 @@ rosrun rokoko_data_forwarding online_data_subscriber.py
 ```
 rosrun rokoko_data_forwarding online_data_recording.py
 ```
+   When test is done, press Ctrl-C to terminate each terminal.
 
-5. When test is done, press Ctrl-C to terminate each terminal.
+5. Then, you can view the skeleton and determine separate points of multiple motions in a complete record, using [recorded_data_animation.py](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/recorded_data_animation.py). To futher preprocess the recorded data, use [recorded_data_preprocessing.py](https://github.com/Zhengro/rokoko_data_forwarding/blob/master/scripts/recorded_data_preprocessing.py).
