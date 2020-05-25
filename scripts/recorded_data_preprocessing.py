@@ -5,18 +5,27 @@ import matplotlib.pyplot as plt
 import random
 import os
 import glob
+import copy
+from sklearn.metrics import confusion_matrix
+import seaborn as sn
+import pandas as pd
 
 
-class RecordProcessing:
+class PreProcessing:
     """
-    Process each txt file where each line is a complete record.
+    Process a txt file where each line is a complete record,
+    in order to construct suitable datasets for the motion classification model.
     Options:
-    1. Remove abnormal records (then replenish with new ones).
-    2. Split the records into train/val/test sets.
-    3. Plot the histograms of all records or records in a subset.
+    1. Remove abnormal records:
+            clean(self, txt_file, num_records, record_idx=[])
+    2. Split the records into train/val/test sets:
+            split(self, txt_file, num_records, proportions)
+    3. Plot the histograms of all records or records in a subset:
+            plot_hist(self, frame_idx_file, num_frames_per_clip, titles=[])
+    4. Segment each record into motions, then downsample each motion into clips:
+            segment(self)
     """
-    def __init__(self, txt_file, num_records, num_sensors, num_paras, num_frames,
-                 record_idx, proportions, num_frames_per_clip, step, motion_clips_dict):
+    def __init__(self, txt_file, num_records, num_sensors, num_paras, num_frames, num_frames_per_clip, step, motion_clips_dict):
         self.txt_file = txt_file
         self.num_records = num_records
         self.num_sensors = num_sensors
@@ -27,7 +36,7 @@ class RecordProcessing:
         self.motion_clips_dict = motion_clips_dict
 
         self.data = self.transform_txt_file()
-        self.segment()
+        # self.segment()
 
     def transform_txt_file(self):
         """
@@ -72,6 +81,7 @@ class RecordProcessing:
         """
         frame_idx_file = '{}'.format(self.txt_file[0:-4]) + '_frame_idx.npy'
         frame_idx_arr = np.load(frame_idx_file)
+        clip_count_file = '{}'.format(self.txt_file[0:-4]) + '_clip_count.pickle'
 
         for i in range(self.data.shape[0]):
             # each record
@@ -82,6 +92,19 @@ class RecordProcessing:
                 # each motion
                 motion = record[:, int(frame_idx[j]):int(frame_idx[j+1]), :, :]
                 sampled_motion = self.downsample(motion, j)
+                # save the number of clips for each motion in test set
+                if self.txt_file[-8:-4] == 'test':
+                    if not os.path.isfile(clip_count_file):
+                        clip_count_dict = motion_clips_dict.copy()
+                        for k in clip_count_dict.keys():
+                            clip_count_dict[k] = []
+                        with open(clip_count_file, 'wb') as f:
+                            pickle.dump(clip_count_dict, f)
+                    with open(clip_count_file, 'rb') as f:
+                        clip_count_dict = pickle.load(f)
+                    clip_count_dict[list(clip_count_dict.keys())[j]].append(sampled_motion.shape[0])
+                    with open(clip_count_file, 'wb') as f:
+                        pickle.dump(clip_count_dict, f)
                 self.motion_clips_dict[list(self.motion_clips_dict.keys())[j]].append(sampled_motion)
 
         # print out summary
@@ -224,6 +247,8 @@ def finalize_subsets(subset, data_dict, dict_files):
     """
     _data, data_file = [], '{}_data.npy'.format(subset)
     _label, label_file = [], '{}_label.npy'.format(subset)
+    if subset == 'test':
+        clip_count_dict = copy.deepcopy(data_dict)
 
     for dict_file in dict_files:
         with open(dict_file, 'rb') as f:
@@ -254,36 +279,170 @@ def finalize_subsets(subset, data_dict, dict_files):
         pickle.dump(data_dict, f)
     print('Saved {}'.format(data_dict_file))
 
+    if subset == 'test':
+        for dict_file in dict_files:
+            with open(dict_file[0:-20] + '_clip_count.pickle', 'rb') as f:
+                dict = pickle.load(f)
+            for k, v in dict.items():
+                clip_count_dict[k].append(v)
+
+        print('Clip counts of each motion for each motion class: ')
+        clip_count = []
+        for k, v in clip_count_dict.items():
+            v_new = [item for sublist in v for item in sublist]
+            clip_count_dict[k] = v_new
+            clip_count.append(v_new)
+            print('\t{}: {}'.format(k, v_new))
+
+        clip_count_list = [item for sublist in clip_count for item in sublist]
+        clip_count_file = '{}_clip_count_list.npy'.format(subset)
+        np.save(clip_count_file, clip_count_list)
+        print('Saved {}'.format(clip_count_file))
+
+
+class PostProcessing:
+    """
+    Process results from the motion classification model.
+    Options:
+    1. Compute top1 acc:
+            compute_top1_acc(self)
+    2. Plot the confusion matrix:
+            plot_confusion_matrix(self)
+    3. Track clips results:
+            track_clips(self)
+    """
+    def __init__(self, test_dict_file, test_label_file, top1_acc_file, pred_file, clip_count_file):
+        self.test_dict = self.load_dict(test_dict_file)
+        self.test_labels = np.load(test_label_file)
+        self.top1_accs = np.load(top1_acc_file)
+        self.preds = np.load(pred_file)
+        self.clip_counts = np.load(clip_count_file)
+
+        self.class_splits, self.class_names = [0], []
+        self.load_class_info()
+
+    def load_dict(self, dict_file):
+        """
+        Load a dictionary from a pickle file.
+        """
+        with open(dict_file, 'rb') as f:
+            dict = pickle.load(f)
+        print('Load ' + dict_file[0:-7] + ': ')
+        for k, v in dict.items():
+            print('\t{}: {}'.format(k, v.shape[0]))
+        return dict
+
+    def load_class_info(self):
+        """
+        Load the class splits and class names in the test set.
+        """
+        c = 0
+        for k, v in self.test_dict.items():
+            c += v.shape[0]
+            self.class_splits.append(int(c))
+            self.class_names.append(k)
+
+    def compute_top1_acc(self):
+        """
+        Compute the top1 acc for each motion class in the test set.
+        """
+        i = 0
+        print('Top1 accuracy for each motion class: ')
+        for k, v in self.test_dict.items():
+            current_accs = self.top1_accs[self.class_splits[i]:self.class_splits[i + 1]]
+            n_correct = np.count_nonzero(current_accs == 100.0)
+            top1_acc_class = n_correct / v.shape[0]
+            print('\t{}:\t{:0.2f}'.format(k, top1_acc_class))
+            i += 1
+
+    def track_clips(self):
+        """
+        Print clip results row by row, each row corresponds to a motion record.
+        """
+        results = [0]*self.class_splits[-1]
+        for i in range(self.class_splits[-1]):
+            if self.top1_accs[i] == 100.0:
+                results[i] = 1
+
+        i = 0
+        c = 0
+        j = 1
+        print('\nClips in each motion record (each row):')
+        for k, v in self.test_dict.items():
+            print(k)
+            while i < self.class_splits[j]:
+                print('\t{}'.format(results[i:i + self.clip_counts[c]]))
+                i += self.clip_counts[c]
+                c += 1
+            j += 1
+
+    def plot_confusion_matrix(self):
+        """
+        Plot the confusion matrix for the motion classification.
+        """
+        cm = confusion_matrix(self.test_labels.tolist(), self.preds)
+        df_cm = pd.DataFrame(cm, index=self.class_names, columns=self.class_names)
+        sn.set(font_scale=0.5)
+        sn.heatmap(df_cm, cmap="YlGnBu", center=40, annot=True, fmt="d", annot_kws={"size": 12},
+                   linewidths=0.5, cbar=False, square=True)
+        plt.yticks(rotation=0)
+        plt.show()
+
 
 if __name__ == '__main__':
 
     random.seed(0)
 
-    # setup example for data cleaning and data set splitting
-    txt_file = '50records_big_right.txt'                # a txt file that contains records before data set splitting
-    num_records = 50                                    # total number of records in the txt file
-    record_idx = [...]                                  # a list of indexes of records to be removed
-    proportions = [0.2, 0.1]                            # proportions of val set and test set
-    num_frames_per_clip = 100                           # number of frames in each clip
+    ###########################################################
+    # A setup example for data cleaning and data set splitting.
+    ###########################################################
+    txt_file    = '50records_big_right.txt'                # a txt file that contains records before data set splitting
+    num_records = 50                                       # total number of records in the txt file
+    record_idx  = []                                       # a list of indexes of records to be removed
+    proportions = [0.2, 0.1]                               # proportions of val set and test set
+    num_frames_per_clip = 100                              # number of frames in each clip
 
-    # setup example for data segmenting and downsampling (do not comment setup above)
-    txt_file = '50records_big_right_test.txt'           # a txt file that contains records after data set splitting
-    num_records = 5                                     # depends on proportions, e.g., train:val:test = 0.7:0.2:0.1
-    num_sensors = 19                                    # number of sensors on the SmartSuit
-    num_paras = 3                                       # x, y, z
-    num_frames = 1000                                   # number of frames in each record
-    step = 10                                           # number of frames to move the clip window within the motion data
-    dict_opts = ['big', 'right']                        # specifies box size and box final position
+    #######################################################
+    # A setup example for data segmenting and downsampling.
+    #######################################################
+    txt_file    = '50records_big_right_test.txt'           # a txt file that contains records after data set splitting
+    num_records = 5                                        # depends on proportions, e.g., train:val:test = 0.7:0.2:0.1
+    num_sensors = 19                                       # number of sensors on the SmartSuit
+    num_paras   = 3                                        # x, y, z
+    num_frames  = 1000                                     # number of frames in each record
+    step        = 10                                       # number of frames to move the clip window within motion data
+    dict_opts   = ['big', 'right']                         # specifies box size and box final position
     motion_clips_dict, data_dict = simple_packing_dicts(dict_opts)
+    # pre = PreProcessing(txt_file, num_records, num_sensors, num_paras, num_frames, num_frames_per_clip,
+    #                     step, motion_clips_dict)
+    # pre.clean(txt_file, num_records, record_idx)
+    # pre.split(txt_file, num_records, proportions)
+    # pre.segment()
 
-    # rp = RecordProcessing(txt_file, num_records, num_sensors, num_paras, num_frames,
-    #                       record_idx, proportions, num_frames_per_clip, step, motion_clips_dict)
+    #######################################################
+    # A setup example for final step of subset preparation.
+    #######################################################
+    subset      = 'test'                                   # specifies the name of that subset
+    if subset == 'test':                                   # fix the order of clips to track misclassified ones
+        dict_files = ['50records_small_left_test_motion_clips.pickle',
+                      '50records_small_right_test_motion_clips.pickle',
+                      '50records_big_left_test_motion_clips.pickle',
+                      '50records_big_right_test_motion_clips.pickle']
+    else:
+        dict_files = []
+        for file in glob.glob('*{}_motion_clips.pickle'.format(subset)):
+            dict_files.append(file)
+    # finalize_subsets(subset, data_dict, dict_files)
 
-    # setup example for final step of subset preparation
-    subset = 'test'
-    dict_files = []
-    for file in glob.glob('*{}_motion_clips.pickle'.format(subset)):
-        dict_files.append(file)
-    finalize_subsets(subset, data_dict, dict_files)
-
-
+    #######################################
+    # A setup example for results analysis.
+    #######################################
+    test_dict_file  = 'test_motion_clips_dict.pickle'
+    test_label_file = 'test_label.npy'
+    top1_acc_file   = 'top1_acc_clip.npy'
+    pred_file       = 'pred_clip.npy'
+    clip_count_file = 'test_clip_count_list.npy'
+    post = PostProcessing(test_dict_file, test_label_file, top1_acc_file, pred_file, clip_count_file)
+    # post.compute_top1_acc()
+    post.track_clips()
+    # post.plot_confusion_matrix()
